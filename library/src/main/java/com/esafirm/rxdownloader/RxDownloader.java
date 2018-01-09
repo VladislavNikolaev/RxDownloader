@@ -67,6 +67,16 @@ public class RxDownloader {
                 mimeType, false, showCompletedNotification));
     }
 
+    public void cancelDownload() {
+        long[] ids = new long[subjectMap.size()];
+        for (int i = 0; i < subjectMap.size(); i++) {
+            long downloadId = subjectMap.keyAt(i);
+            ids[i] = downloadId;
+        }
+        subjectMap.clear();
+        getDownloadManager().remove(ids);
+    }
+
     @Nullable
     private DownloadManager getDownloadManager() {
         return (DownloadManager) context.getSystemService(Context.DOWNLOAD_SERVICE);
@@ -77,7 +87,6 @@ public class RxDownloader {
 
         PublishSubject<String> publishSubject = PublishSubject.create();
         subjectMap.put(downloadId, publishSubject);
-
         return publishSubject;
     }
 
