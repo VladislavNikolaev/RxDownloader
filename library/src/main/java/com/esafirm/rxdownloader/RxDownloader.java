@@ -97,6 +97,7 @@ public class RxDownloader {
                                                       boolean inPublicDir,
                                                       boolean showCompletedNotification) {
         DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
+        request.setTitle(filename);
         request.setDescription(filename);
         request.setMimeType(mimeType);
         destinationPath = destinationPath == null ?
