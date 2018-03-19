@@ -77,6 +77,7 @@ public class RxDownloader {
             ids[i] = downloadId;
         }
         subjectMap.clear();
+        queueOfFiles.clear();
         getDownloadManager().remove(ids);
     }
 
