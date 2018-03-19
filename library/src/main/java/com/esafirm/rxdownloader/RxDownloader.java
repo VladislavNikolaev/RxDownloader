@@ -12,6 +12,8 @@ import android.os.Environment;
 import com.esafirm.rxdownloader.utils.LongSparseArray;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 import io.reactivex.Observable;
 import io.reactivex.annotations.NonNull;
@@ -27,6 +29,7 @@ public class RxDownloader {
 
     private Context context;
     private LongSparseArray<PublishSubject<String>> subjectMap = new LongSparseArray<>();
+    private HashMap<Long, String> queueOfFiles = new HashMap<>();
 
     public RxDownloader(@NonNull Context context) {
         this.context = context.getApplicationContext();
@@ -45,7 +48,7 @@ public class RxDownloader {
                                                         @NonNull String filename,
                                                         @NonNull String mimeType,
                                                         boolean showCompletedNotification) {
-        return download(getDefaultRequest(url, filename, null,
+        return download(url, getDefaultRequest(url, filename, null,
                 mimeType, true, showCompletedNotification));
     }
 
@@ -54,7 +57,7 @@ public class RxDownloader {
                                                         @NonNull String destinationPath,
                                                         @NonNull String mimeType,
                                                         boolean showCompletedNotification) {
-        return download(getDefaultRequest(url, filename, destinationPath,
+        return download(url, getDefaultRequest(url, filename, destinationPath,
                 mimeType, true, showCompletedNotification));
     }
 
@@ -63,7 +66,7 @@ public class RxDownloader {
                                                        @NonNull String destinationPath,
                                                        @NonNull String mimeType,
                                                        boolean showCompletedNotification) {
-        return download(getDefaultRequest(url, filename, destinationPath,
+        return download(url, getDefaultRequest(url, filename, destinationPath,
                 mimeType, false, showCompletedNotification));
     }
 
@@ -77,16 +80,21 @@ public class RxDownloader {
         getDownloadManager().remove(ids);
     }
 
+    public boolean isFileAlreadyInQueue(@NonNull String url) {
+        return queueOfFiles.values().contains(url);
+    }
+
     @Nullable
     private DownloadManager getDownloadManager() {
         return (DownloadManager) context.getSystemService(Context.DOWNLOAD_SERVICE);
     }
 
-    public Observable<String> download(DownloadManager.Request request) {
+    public Observable<String> download(@NonNull String url, DownloadManager.Request request) {
         long downloadId = getDownloadManager().enqueue(request);
 
         PublishSubject<String> publishSubject = PublishSubject.create();
         subjectMap.put(downloadId, publishSubject);
+        queueOfFiles.put(downloadId, url);
         return publishSubject;
     }
 
@@ -153,6 +161,7 @@ public class RxDownloader {
                 publishSubject.onError(
                         new IllegalStateException("Cursor empty, this shouldn't happened"));
                 subjectMap.remove(id);
+                queueOfFiles.remove(id);
                 return;
             }
 
@@ -162,6 +171,7 @@ public class RxDownloader {
                 downloadManager.remove(id);
                 publishSubject.onError(new IllegalStateException("Download Failed"));
                 subjectMap.remove(id);
+                queueOfFiles.remove(id);
                 return;
             }
 
@@ -172,6 +182,7 @@ public class RxDownloader {
             publishSubject.onNext(downloadedPackageUriString);
             publishSubject.onComplete();
             subjectMap.remove(id);
+            queueOfFiles.remove(id);
         }
     }
 }
