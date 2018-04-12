@@ -26,6 +26,7 @@ import io.reactivex.subjects.PublishSubject;
 public class RxDownloader {
 
     private static final String DEFAULT_MIME_TYPE = "*/*";
+    private static final String ACTION_DOWNLOAD_COMPLETED = "android.intent.action.DOWNLOAD_COMPLETED";
 
     private Context context;
     private LongSparseArray<PublishSubject<String>> subjectMap = new LongSparseArray<>();
@@ -35,6 +36,7 @@ public class RxDownloader {
         this.context = context.getApplicationContext();
         DownloadStatusReceiver downloadStatusReceiver = new DownloadStatusReceiver();
         IntentFilter intentFilter = new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE);
+        intentFilter.addAction(ACTION_DOWNLOAD_COMPLETED);
         context.registerReceiver(downloadStatusReceiver, intentFilter);
     }
 
